@@ -1,14 +1,27 @@
-\documentclass{jsarticle}
+\documentclass[a4j,11pt]{jsarticle}
 \usepackage{bm}
 \newcommand{\argmax}{\mathop{\rm arg~max}\limits}
 \begin{document}
+\setcounter{section}{1}
+\section{文字列・テキスト処理の基礎}
 \begin{itemize}
  \item トライ法
        \begin{itemize}
 	\item 文字列探索アルゴリズム
 	\item 木構造
 	\item 一つのノードには文字種類数だけの大きさの配列
+	\item 各配列に「rootからたどってきた文字列$+$配列の文字」の文字列へのポインタ
+	\item 遷移先がキー(辞書に登録されている単語)ならマークをつける
+	\item 例: root[く] $\rightarrow$ く[る] $\rightarrow$ くる*[ま] $\rightarrow$ くるま*
+	\item 日本語は文字種類数が数千種あるので数段で記憶領域が爆発。
+	      配列を文字ではなくバイトやビットで作る
        \end{itemize}
+\end{itemize}
+
+\section{系列の解析(1)}
+
+
+\begin{itemize}
  \item 形態素解析
        \begin{itemize}
 	\item 形態素：語の最小単位
@@ -157,7 +170,7 @@
 		     \begin{itemize}
 		      \item Wikipediaなどウェブ上の進化する大規模辞書か
 			    ら
-		      \item 分布類似度計算によって同義関係を自動抽出			   
+		      \item 分布類似度計算によって同義関係を自動抽出
 		     \end{itemize}
 	      \end{itemize}
 	\item 分布類似度
