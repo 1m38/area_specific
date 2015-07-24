@@ -19,12 +19,10 @@
 \end{itemize}
 
 \section{系列の解析(1)}
-
-
 \begin{itemize}
  \item 形態素解析
        \begin{itemize}
-	\item 形態素：語の最小単位
+	\item 形態素：語の最小単位(日本語なら単語。接頭辞・接尾辞も便宜的に語と見る)
 	\item 語の区切り、品詞、活用形などを求める処理
 	\item 語の区切りの難しさ$\rightarrow$ビタビアルゴリズム
 	\item 単語辞書にないもの$\rightarrow$未知語処理
@@ -35,22 +33,33 @@
 		      \item 動的計画法
 		      \item 形態素解析、品詞解析、固有表現認識などに
 		      \item 文に対するラティス構造の最適パス選択に
-		      \item 文頭ノードから、二つ以上のノードから繋がっているようなノー
-	    ドまでのパスのコストとして、最小のものを選んでいく
+		      \item 文頭に(文字数で)近いノードから順に、文頭ノードから各ノードへのコストが
+			    最小となるようなパスを選んでいく
 		     \end{itemize}
 	       \item 未知語処理
 		     \begin{itemize}
 		      \item 未知語を擬似ノードとして大きなコストを与える
+			    (漢字連続、カタカナ連続などを1語とする)
 		      \item 辞書中の単語に分割できなければ未知語
-		      \item 松葉がに$\rightarrow$松葉かに
+		      \item 既知の単語へ帰着(松葉がに$\rightarrow$松葉かに)
+		      \item 単語辞書の自動拡充(Wikipediaの見出しなどを利用)
+		      \item 「フットサル」は「サル」の一種？(類似度計算)
 		     \end{itemize}
 	      \end{itemize}
        \end{itemize}
+\end{itemize}
+
+\section{コーパスに基づく自然言語処理}
+\begin{itemize}
  \item コーパス：文書を集めたもの
        \begin{itemize}
-	\item 対訳コーパス
-	\item 注釈付与コーパス(タグ(与える注釈)付きコーパス)
+	\item 生コーパス
+	\item 均衡コーパス: 新聞、書籍、雑誌など様々なジャンルのテキストをバランスよく収集したもの
+	\item 対訳コーパス(パラレルコーパス)
+	\item コンパラブルコーパス: 対訳関係ではないが、同じトピックに関する2言語の文書対を収集したもの
+	\item 注釈付与コーパス(タグ付きコーパス)
 	      \begin{itemize}
+	       \item 注釈(タグ): 形態素, 構文, 固有表現, 語の意味, 省略照応, 談話関係, テキスト分類など
 	       \item 注釈付与コーパスの注釈を正解の基準とする
 	       \item 素性の組み合わせの教師データとして利用
 	      \end{itemize}
@@ -62,136 +71,178 @@
 	      \begin{itemize}
 	       \item 単語の出現確率を与えるモデル
 	       \item 記号の出現確率への影響を一定範囲の履歴に限定
-	       \item n-1階マルコフモデル(直前のn-1個の単語から求める)
-	       \item nの大きさに関して、表現の正確さとデータスパースネス
-		     のトレードオフの関係
-	      \end{itemize}
-	\item 隠れマルコフモデル
-	      \begin{itemize}
-	       \item 観測される出力記号は、マルコフ過程における状態のう
-		     ち、観測されない状態(隠れ状態)から確率的に出力されたものと過程
-	       \item 英語の品詞タグ付け問題など
-		     \begin{itemize}
-		      \item 文を、品詞を隠れ状態としたときの各状態からの
-			    出力の列とみなせる
-		      \item 品詞列のマルコフ性の仮定のもと、
-		      \begin{eqnarray*}\\
-		       \bm{\hat{y}} & = & \argmax_{y} P(\bm{y}|\bm{x}) \\
-		       &=& \argmax_{y}
-			\frac{P(\bm{x}|\bm{y})P(\bm{y})}{P(\bm{x})} \\
-		       &=& \argmax_{y}P(\bm{x}|\bm{y})P(\bm{y}) \\
-		       &=& \argmax_{y} \prod_i{P(x_i|y_i)P(y_i|y_{i-1})}
-		      \end{eqnarray*}
-			    により、最も確率の高い品詞列(状態遷移)をビタ
-			    ビアルゴリズムによって求める
-		     \end{itemize}
-	      \end{itemize}
-	\item ナイーブベイズ
-	      \begin{itemize}
-	       \item 機械学習手法の一つ
-	       \item \begin{eqnarray*}
-		\hat{y} & = & \argmax_{y} P(y|\bm{x}) \\
-		      &=& \argmax_{y}
-		       \frac{P(\bm{x}|y)P(y)}{P(\bm{x})} \\
-		      &=& \argmax_{y}P(\bm{x}|y)P(y) \\
-&=& \argmax_{y} \prod_i{P(x_i|y)P(y)}
+	       \item n-1階マルコフモデル(直前のn-1個の単語を参照)
+	       \item 例:bigram
+		     \begin{eqnarray*}
+		      P(私は本を買った) = P(私|文頭) \times P(は|私) \times P(本|は) \\
+		       \times P(を|本) \times P(買った|を)
 		     \end{eqnarray*}
+	       \item nを大きくすれば正確なモデルが作れるが、
+		     データスパースネス(確率0の要素が多くなる)の問題が深刻に\\
+		     最近は5-gramあたりが有効に
 	      \end{itemize}
-	\item CRF
+       \end{itemize}
+ \item ナイーブベイズ
+       \begin{itemize}
+	\item 機械学習手法の一つ。分類(教師あり学習)手法
+	\item 素性ベクトル$\bm{x}$、クラスラベル$y$、各素性$x_i$は他の素性$x_j$と独立と仮定
+	      \begin{eqnarray*}
+	       \hat{y} &=& \argmax_{y} P(y|\bm{x}) \\
+	       &=& \argmax_{y}
+		\frac{P(\bm{x}|y)P(y)}{P(\bm{x})} \\
+	       &=& \argmax_{y}P(\bm{x}|y)P(y) \\
+	       &=& \argmax_{y} \prod_i{P(x_i|y)P(y)}
+	      \end{eqnarray*}
+       \end{itemize}
+\end{itemize}
+
+\section{系列の解析(2)}
+\begin{itemize}
+ \item 隠れマルコフモデル(HMM)
+       \begin{itemize}
+	\item 観測される出力記号は、マルコフ過程における状態のうち、
+	      観測されない状態(隠れ状態)から確率的に出力されたものと仮定
+	\item 英語の品詞タグ付け問題など
 	      \begin{itemize}
+	       \item 文を、品詞を隠れ状態としたときの各状態からの出力の列とみなせる
+	       \item 品詞列のマルコフ性
+		     \[
+		      P(\bm{y}) = \prod_i P(y_i|y_{i-1})
+		     \]
+		     と、単語出力がその品詞だけに依存する
+		     \[
+		      P(\bm{x}|\bm{y}) = \prod_i P(x_i|y_i)
+		     \]
+		     ことを仮定すると、
+		     \begin{eqnarray*}
+		      \bm{\hat{y}} &=& \argmax_{y} P(\bm{y}|\bm{x}) \\
+		      &=& \argmax_{y} \frac{P(\bm{x}|\bm{y})P(\bm{y})}{P(\bm{x})} \\
+		      &=& \argmax_{y} P(\bm{x}|\bm{y})P(\bm{y}) \\
+		      &=& \argmax_{y} \prod_i{P(x_i|y_i)P(y_i|y_{i-1})}
+		     \end{eqnarray*}
+		     により、入力文字列$\bm{x}$に対する最も確率の高い
+		     品詞列(状態遷移)$\bm{y}$をビタビアルゴリズムによって求められる
+	      \end{itemize}
+       \end{itemize}
+ \item CRF(条件付き確率場)
+       \begin{itemize}
 	       \item 機械学習手法の一つ。対数線形モデル
 	       \item 分類器の逐次適用における局所性の問題を解決
 	       \item 入力文と品詞bigram$y_{i-1}$、$y_i$から素性を抽出す
 		     る素性関数のみを元に$P(\bm{y}|\bm{x})$の最適化
-	      \end{itemize}
-	\item 固有表現認識
-	      \begin{itemize}
-	       \item 固有表現：地名、人名、組織名などの固有名に時間や数量などを加えたも
-		     の
-	       \item 情報抽出・除法検索において重要
-	       \item BIOモデル
-		     \begin{itemize}
-		      \item 固有表現認識を系列ラベリングとして各単語にラベリング
-		      \item 例えば、地名の始点(B-地名)、地名の続き
-			    (I-地名)、いずれでもない(O)とラベリング
-		      \item ビタビアルゴリズムで整合性を調べつつ、CRFなどによってラベリングを
-			    行い、その組み合わせで固有表現を認識
-		     \end{itemize}
-	      \end{itemize}
        \end{itemize}
- \item 意味解析
+ \item 固有表現認識
        \begin{itemize}
-	\item 意味、概念
+	\item 固有表現：地名、人名、組織名などの固有名および、時間(2015 年)や数量(3 個)など
+	\item どこまでが一続きの固有表現か、どの固有表現か
+	      (「ローマ」は地名？サカーチーム名(組織名)？あるいは人名？)
+	\item 情報抽出・情報検索において重要
+	\item BIOモデル
 	      \begin{itemize}
-	       \item 語によって様々な対象を文節
-	       \item 内包的定義
-		     \begin{itemize}
-		      \item 本質的な特徴・性質によりある概念を定義
-		      \item A = $\{x|xは10以下の奇数\}$
-		     \end{itemize}
-	       \item 外延的定義
-		     \begin{itemize}
-		      \item その概念に含まれる具体例を列挙することによって定義
-		      \item A = $\{1,3,5,7,9\}$
-		     \end{itemize}
-	       \item 上位概念、類/下位概念、種
-		     \begin{itemize}
-		      \item 内法的定義：特徴を受け継ぐ最も近い類(最近類)と最近類の他の種との差(種差)
-		      \item (例)植物：光合成を行う生物
-		      \item 外延的定義：種子植物、シダ植物、コケ植物
-		     \end{itemize}
-	      \end{itemize}
-	\item 比喩
-	      \begin{itemize}
-	       \item 新たなことや抽象的なことを表現する際に、既存の具体的な物事を用いる
-		     こと
-	       \item 既存の具体物の特徴・属性(顕現性)に注目
-	       \item 意味の拡張であることから、類犠牲の拡張のプロセスを利用することで比
-		     喩表現の理解を導くことが可能
-	       \item メタファー
-		     \begin{itemize}
-		      \item 比喩を明示しない比喩表現
-		      \item (例)彼女はダイヤモンドだ
-		     \end{itemize}
-	       \item メトニミー
-		     \begin{itemize}
-		      \item 容器-中身、付属物-主体、作者-作品など
-			    の近接性の関係を用いた比喩
-		      \item (例)鍋を食べる
-		      \item (例)白バイに捕まる
-		     \end{itemize}
-	      \end{itemize}
-	\item シソーラス
-	      \begin{itemize}
-	       \item 意味の上位下位関係、同義関係を中心に語を体系的にまとめた辞書
-	       \item 自然文によって意味を定義する辞書に比べコンピュータ
-		     処理に適している
-	       \item 自動抽出について
-		     \begin{itemize}
-		      \item Wikipediaなどウェブ上の進化する大規模辞書か
-			    ら
-		      \item 分布類似度計算によって同義関係を自動抽出
-		     \end{itemize}
-	      \end{itemize}
-	\item 分布類似度
-	      \begin{itemize}
-	       \item 「文脈の似ている語は類似している」$\rightarrow$共起
-		     する語が似ていれば類似している」という考えに基づく
-		     尺度
-	       \item ある語との自己相互情報量：
-		     $PMI(x,y) = log{\frac{P(x,y)}{P(x)P(y)}}$
-		     の高い語を関連語とし、ある２つの語が類似度の高い関連語
-		     集合を持つ場合、その２つの語を類義語とする
-	       \item 反義語と類義語の区別が困難
-	      \end{itemize}
-	\item 語義曖昧性解消(WSD)
-	      \begin{itemize}
-	       \item 文脈中の多義語の語義の選択する問題
-	       \item 語の語義と文中の一定数の語のリストを付与した注釈付
-		     与コーパスから教師あり学習として学習
-	       \item (例)check、financeが文脈中にあればbank(銀行)と学習
-	       \item Wikipediaの曖昧性回避ページなどを利用
+	       \item 固有表現認識を系列ラベリングとして各単語にラベリング
+	       \item 例えば、地名の始点(B-地名)、地名の続き
+		     (I-地名)、いずれでもない(O)とラベリング
+	       \item ビタビアルゴリズムで整合性(固有表現はIから始まらない)を調べつつ、
+		     CRFなどによってラベリングを行い、その組み合わせで固有表現を認識
 	      \end{itemize}
        \end{itemize}
 \end{itemize}
+
+\section{意味の解析(1)}
+\begin{itemize}
+ \item 意味、概念
+       \begin{itemize}
+	\item 語によって様々な対象を分節
+	      \begin{itemize}
+	       \item 対象に語を与えることで、その対象に対応する概念を作り出す(切り出す)
+	       \item 例:「わびさび」という概念は英語圏にない
+	      \end{itemize}
+	\item 内包的定義
+	      \begin{itemize}
+	       \item 本質的な特徴・性質によりある概念を定義
+	       \item A = $\{x|xは10以下の奇数\}$
+	       \item 芸術: 美を創造・表現しようとする人間活動, およびその作品(三省堂/大辞林)
+	      \end{itemize}
+	\item 外延的定義
+	      \begin{itemize}
+	       \item その概念に含まれる具体例を列挙することによって定義
+	       \item A = $\{1,3,5,7,9\}$
+	       \item 芸術: 建築, 彫刻, 音楽, 文学, 演劇, 舞踊, 映画など
+	      \end{itemize}
+	\item 上位概念、類/下位概念、種
+	      \begin{itemize}
+	       \item 上位概念(類): その概念を含む、より一般的・総称的・抽象的な概念
+	       \item 下位概念(種): その概念に関する、より特定・個別・具体的な概念
+	       \item 内法的定義: 特徴を受け継ぐ最も近い類(最近類)と最近類の他の種との差(種差)
+	       \item 外延的定義: 下位概念の列挙
+	       \item (例)植物: 光合成を行う生物(上位概念:生物)。
+		     種子植物、シダ植物、コケ植物など(下位概念)。
+	      \end{itemize}
+       \end{itemize}
+ \item 比喩
+       \begin{itemize}
+	\item 新たなことや抽象的なことを表現する際に、既存の具体的な物事を用いる
+	      こと
+	\item 既存の具体物の特徴・属性(顕現性)に注目
+	\item 意味の拡張であることから、類犠牲の拡張のプロセスを利用することで比
+	      喩表現の理解を導くことが可能
+	\item 直喩
+	      \begin{itemize}
+	       \item 比喩を明示する表現(〜のようだ)を伴うもの
+	       \item (例) 彼女はダイヤモンドのようだ
+		     (ダイヤモンドの「輝く」という特徴・属性(顕現性)が取り出されている)
+	      \end{itemize}
+	\item メタファー(隠喩)
+	      \begin{itemize}
+	       \item 比喩を明示しない比喩表現
+	       \item (例)彼女はダイヤモンドだ
+	      \end{itemize}
+	\item メトニミー(換喩)
+	      \begin{itemize}
+	       \item 容器-中身、付属物-主体、作者-作品など
+		     の近接性の関係を用いた比喩
+	       \item (例)鍋を食べる
+	       \item (例)白バイに捕まる
+	      \end{itemize}
+       \end{itemize}
+ \item シソーラス
+       \begin{itemize}
+	\item 意味の上位下位関係、同義関係を中心に語を体系的にまとめた辞書
+	\item 自然文によって意味を定義する辞書に比べコンピュータ
+	      処理に適している
+	\item 自動抽出について
+	      \begin{itemize}
+	       \item Wikipediaなどウェブ上の進化する大規模辞書から
+	       \item 分布類似度計算によって同義関係を自動抽出
+	      \end{itemize}
+       \end{itemize}
+ \item 分布類似度
+       \begin{itemize}
+	\item 「文脈の似ている語は類似している」$\rightarrow$
+	      「共起する語が似ていれば類似している」
+	      という考えに基づく尺度\\
+	      (共起: 2つの語がある範囲[同一文書内,同一文内,前後10語以内,係り受け関係など]
+	      で共に[同時に]出現すること)
+	\item 類義語の自動獲得に利用
+	\item ある語との自己相互情報量：
+	      $\mathrm{PMI}(x,y) = \log{\frac{P(x,y)}{P(x)P(y)}}$
+	      の高い語を関連語とし、ある２つの語が類似度の高い関連語
+	      集合を持つ場合、その２つの語を類義語とする
+	\item 反義語と類義語の区別が困難
+       \end{itemize}
+ \item 語義曖昧性解消(WSD)
+       \begin{itemize}
+	\item 文脈中の多義語の語義を選択する問題
+	\item 語の語義と文中の一定数の語のリストを付与した注釈付
+	      与コーパスから教師あり学習として学習
+	\item (例)check、financeが文脈中にあればbank(銀行)と学習
+	\item Wikipediaの曖昧性回避ページなどを利用
+       \end{itemize}
+\end{itemize}
+
+\section{構文の解析(1)}
+\begin{itemize}
+ \item 
+\end{itemize}
+
 \end{document}
